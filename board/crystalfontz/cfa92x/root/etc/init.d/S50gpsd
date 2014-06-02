@@ -1,0 +1,7 @@
+#!/bin/sh
+#
+# Starts the gps daemon.
+#
+
+#dont use
+exit 0

@@ -1,0 +1,11 @@
+--- a/mkspecs/common/gcc-base.conf
++++ b/mkspecs/common/gcc-base.conf
+@@ -35,7 +35,7 @@
+ QMAKE_CFLAGS_DEPS           += -M
+ QMAKE_CFLAGS_WARN_ON        += -Wall -W
+ QMAKE_CFLAGS_WARN_OFF       += -w
+-QMAKE_CFLAGS_RELEASE        += -O2
++QMAKE_CFLAGS_RELEASE        += -O3 -flto
+ QMAKE_CFLAGS_DEBUG          += -g
+ QMAKE_CFLAGS_SHLIB          += -fPIC
+ QMAKE_CFLAGS_STATIC_LIB     += -fPIC

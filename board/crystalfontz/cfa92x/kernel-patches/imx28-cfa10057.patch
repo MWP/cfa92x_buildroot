@@ -1,0 +1,122 @@
+--- a/arch/arm/boot/dts/imx28-cfa10057.dts
++++ b/arch/arm/boot/dts/imx28-cfa10057.dts
+@@ -23,6 +7,7 @@
+ 	apb@80000000 {
+ 		apbh@80000000 {
+ 			pinctrl@80018000 {
++			
+ 				usb_pins_cfa10057: usb-10057@0 {
+ 					reg = <0>;
+ 					fsl,pinmux-ids = <
+@@ -72,6 +57,7 @@
+ 					fsl,voltage = <MXS_VOLTAGE_HIGH>;
+ 					fsl,pull-up = <MXS_PULL_DISABLE>;
+ 				};
++				
+ 			};
+ 
+ 			lcdif@80030000 {
+@@ -82,7 +68,7 @@
+ 				status = "okay";
+ 
+ 				display: display {
+-					bits-per-pixel = <32>;
++					bits-per-pixel = <16>;
+ 					bus-width = <18>;
+ 
+ 					display-timings {
+@@ -105,6 +91,19 @@
+ 					};
+ 				};
+ 			};
++			
++			can0: can@80032000 {
++				pinctrl-names = "default";
++				pinctrl-0 = <&can0_pins_a>;
++				status = "okay";
++			};	
++
++			can1: can@80034000 {
++				pinctrl-names = "default";
++				pinctrl-0 = <&can1_pins_a>;
++				status = "okay";
++			};	
++
+ 		};
+ 
+ 		apbx@80040000 {
+@@ -115,9 +114,13 @@
+ 
+ 			pwm: pwm@80064000 {
+ 				pinctrl-names = "default";
+-				pinctrl-0 = <&pwm3_pins_b>;
++				pinctrl-0 = <&pwm4_pins_a>;
+ 				status = "okay";
+ 			};
++			
++			i2c0: i2c@80058000 {
++				status = "disabled";
++			};
+ 
+ 			i2c1: i2c@8005a000 {
+ 				pinctrl-names = "default";
+@@ -130,7 +133,7 @@
+ 			};
+ 		};
+ 	};
+-
++	
+ 	ahb@80080000 {
+ 		usb1: usb@80090000 {
+ 			vbus-supply = <&reg_usb1_vbus>;
+@@ -138,13 +141,25 @@
+ 			pinctrl-names = "default";
+ 			status = "okay";
+ 		};
++		
++		mac0: ethernet@800f0000 {
++			phy-mode = "rmii";
++			pinctrl-names = "default";
++			pinctrl-0 = <&mac0_pins_a>;
++			phy-reset-gpios = <&gpio2 21 0>;
++			phy-reset-duration = <100>;
++			status = "okay";
++		};		
+ 	};
+ 
+ 	regulators {
+ 		compatible = "simple-bus";
++		#address-cells = <1>;
++		#size-cells = <0>;		
+ 
+-		reg_usb1_vbus: usb1_vbus {
++		reg_usb1_vbus: regulator@0 {
+ 			compatible = "regulator-fixed";
++			reg = <0>;
+ 			pinctrl-names = "default";
+ 			pinctrl-0 = <&usb_pins_cfa10057>;
+ 			regulator-name = "usb1_vbus";
+@@ -154,21 +169,11 @@
+ 		};
+ 	};
+ 
+-	ahb@80080000 {
+-		mac0: ethernet@800f0000 {
+-			phy-mode = "rmii";
+-			pinctrl-names = "default";
+-			pinctrl-0 = <&mac0_pins_a>;
+-			phy-reset-gpios = <&gpio2 21 0>;
+-			phy-reset-duration = <100>;
+-			status = "okay";
+-		};
+-	};
+-
+ 	backlight {
+ 		compatible = "pwm-backlight";
+-		pwms = <&pwm 3 5000000>;
++		pwms = <&pwm 4 5000000>;
+ 		brightness-levels = <0 4 8 16 32 64 128 255>;
+ 		default-brightness-level = <7>;
++		status = "okay";
+ 	};
+ };

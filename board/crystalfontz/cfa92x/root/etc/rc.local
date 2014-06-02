@@ -1,0 +1,7 @@
+#modprobe asix
+modprobe can
+modprobe can-raw
+modprobe flexcan
+ip link set can0 type can bitrate 500000
+ifconfig can0 up
+ntpdate 192.168.1.1

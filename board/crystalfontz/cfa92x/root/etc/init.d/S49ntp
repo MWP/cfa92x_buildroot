@@ -1,0 +1,7 @@
+#! /bin/sh
+#
+# System-V init script for the openntp daemon
+#
+
+#dont use
+exit 0;

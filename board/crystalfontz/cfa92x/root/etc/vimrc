@@ -1,0 +1,10 @@
+set nocompatible
+set backspace=2
+set si
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+syntax on
+set background=dark
+set foldmethod=manual
+map h   v%zf
