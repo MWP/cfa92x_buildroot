@@ -1,0 +1,46 @@
+--- a/src/declarative/util/qdeclarativespringanimation.cpp
++++ b/src/declarative/util/qdeclarativespringanimation.cpp
+@@ -51,8 +51,10 @@
+ #include <limits.h>
+ #include <math.h>
+ 
+-QT_BEGIN_NAMESPACE
++//#define DEFAULT_TIMER_INTERVAL 16 -- faaaar too fast
++#define DEFAULT_TIMER_INTERVAL 50
+ 
++QT_BEGIN_NAMESPACE
+ 
+ class QDeclarativeSpringAnimationPrivate : public QDeclarativePropertyAnimationPrivate
+ {
+@@ -116,10 +118,10 @@
+         return;
+ 
+     if (mode == Spring) {
+-        if (elapsed < 16) // capped at 62fps.
++        if (elapsed < DEFAULT_TIMER_INTERVAL)
+             return;
+-        int count = elapsed / 16;
+-        lastTime = time - (elapsed - count * 16);
++        int count = elapsed / DEFAULT_TIMER_INTERVAL;
++        lastTime = time - (elapsed - count * DEFAULT_TIMER_INTERVAL);
+     } else {
+         lastTime = time;
+     }
+@@ -148,7 +150,7 @@
+     if (mode == Spring) {
+         // Real men solve the spring DEs using RK4.
+         // We'll do something much simpler which gives a result that looks fine.
+-        int count = elapsed / 16;
++        int count = elapsed / DEFAULT_TIMER_INTERVAL;
+         for (int i = 0; i < count; ++i) {
+             qreal diff = srcVal - animation.currentValue;
+             if (haveModulus && qAbs(diff) > modulus / 2) {
+@@ -168,7 +170,7 @@
+                 else if (animation.velocity < -maxVelocity)
+                     animation.velocity = -maxVelocity;
+             }
+-            animation.currentValue += animation.velocity * qreal(16.0) / qreal(1000.0);
++            animation.currentValue += animation.velocity * qreal(DEFAULT_TIMER_INTERVAL) / qreal(1000.0);
+             if (haveModulus) {
+                 animation.currentValue = fmod(animation.currentValue, modulus);
+                 if (animation.currentValue < qreal(0.0))

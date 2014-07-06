@@ -1,0 +1,12 @@
+--- a/src/corelib/animation/qabstractanimation.cpp
++++ b/src/corelib/animation/qabstractanimation.cpp
+@@ -156,7 +156,8 @@
+ 
+ #ifndef QT_NO_ANIMATION
+ 
+-#define DEFAULT_TIMER_INTERVAL 16
++//#define DEFAULT_TIMER_INTERVAL 16 -- faaaar too fast
++#define DEFAULT_TIMER_INTERVAL 50
+ #define STARTSTOP_TIMER_DELAY 0
+ 
+ QT_BEGIN_NAMESPACE
