@@ -1,0 +1,17 @@
+--- a/CMakeLists.txt	2010-03-03 20:37:40.000000000 +1030
++++ b/CMakeLists.txt	2014-07-06 16:18:26.183107721 +0930
+@@ -189,14 +189,6 @@
+         set(MAP_FAILED "((void *) -1)")
+     endif()
+ 
+-    check_c_source_runs("
+-        static int notsupported = 1;
+-        void test_ctor (void) __attribute__((constructor));
+-        void test_ctor (void) { notsupported = 0; }
+-        int main(void) { return (notsupported); }
+-        "
+-        ALLEGRO_USE_CONSTRUCTOR)
+-
+     if(MAGIC_MAIN)
+         set(ALLEGRO_WITH_MAGIC_MAIN 1)
+     endif(MAGIC_MAIN)

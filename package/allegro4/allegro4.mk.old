@@ -1,0 +1,74 @@
+#############################################################
+#
+# Allegro4: a game programming library
+#
+#############################################################
+ALLEGRO4_VERSION:=4.2.1
+ALLEGRO4_SOURCE:=allegro-$(ALLEGRO4_VERSION).tar.gz
+ALLEGRO4_SITE:=http://downloads.sourceforge.net/project/alleg/allegro/$(ALLEGRO5_VERSION)
+ALLEGRO4_CAT:=zcat
+ALLEGRO4_DIR:=$(BUILD_DIR)/allegro-$(ALLEGRO4_VERSION)
+
+$(DL_DIR)/$(ALLEGRO4_SOURCE):
+	$(call DOWNLOAD,$(ALLEGRO4_SITE),$(ALLEGRO4_SOURCE))
+
+allegro4-source: $(DL_DIR)/$(ALLEGRO4_SOURCE)
+
+$(ALLEGRO4_DIR)/.unpacked: $(DL_DIR)/$(ALLEGRO4_SOURCE)
+	$(ALLEGRO4_CAT) $(DL_DIR)/$(ALLEGRO4_SOURCE) | tar -C $(BUILD_DIR) $(TAR_OPTIONS) -
+	touch $@
+
+$(ALLEGRO4_DIR)/.configured: $(ALLEGRO4_DIR)/.unpacked
+	(cd $(ALLEGRO4_DIR); \
+	$(TARGET_CONFIGURE_OPTS) \
+	CFLAGS="$(TARGET_CFLAGS)" \
+	LDFLAGS="$(TARGET_LDFLAGS)" \
+	CROSSCOMPILE=1 \
+	./configure \
+		--target=$(GNU_TARGET_NAME) \
+		--host=$(GNU_TARGET_NAME) \
+		--build=$(GNU_HOST_NAME) \
+		--prefix=/usr \
+		--without-svgalib \
+		--enable-modules=no \
+		--enable-static=yes \
+		--enable-shared=no \
+		--disable-asm \
+		--disable-mmx \
+		--disable-sse \
+		--disable-color24 \
+		--without-x );
+	touch $@
+# allegro doesn't seem to build as shared library
+# 		--disable-color24 \
+# 		--disable-color32 \
+
+$(ALLEGRO4_DIR)/lib/unix/liballeg.a: $(ALLEGRO4_DIR)/.configured
+	$(MAKE) -C $(ALLEGRO4_DIR) CROSSCOMPILE=1
+	touch $@
+
+#$(STAGING_DIR)/usr/lib/liballeg.so: $(ALLEGRO4_DIR)/lib/unix/liballeg.a
+#	$(MAKE) -C $(ALLEGRO4_DIR) install
+#	touch -c $@
+#
+# $(TARGET_DIR)/usr/lib/liballeg.so.so: $(STAGING_DIR)/usr/lib/liballeg.so
+# 	cp -dpf $(STAGING_DIR)/usr/lib/liballeg*.so* $(TARGET_DIR)/usr/lib/
+# 	-$(STRIP) --strip-unneeded $(TARGET_DIR)/usr/lib/liballeg.so
+
+ALLEGRO allegro: $(ALLEGRO4_DIR)/lib/unix/liballeg.a
+
+allegro-clean:
+	$(MAKE) DESTDIR=$(TARGET_DIR) CC=$(TARGET_CC) -C $(ALLEGRO4_DIR) uninstall
+	-$(MAKE) -C $(ALLEGRO4_DIR) clean
+
+allegro-dirclean:
+	rm -rf $(ALLEGRO4_DIR)
+
+#############################################################
+#
+# Toplevel Makefile options
+#
+#############################################################
+ifeq ($(strip $(BR2_PACKAGE_ALLEGRO4)),y)
+TARGETS+=allegro4
+endif

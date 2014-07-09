@@ -1,0 +1,10 @@
+--- a/addons/loadpng/loadpng.c	2014-07-06 20:03:49.047307069 +0930
++++ b/addons/loadpng/loadpng.c	2014-07-06 20:00:49.716409559 +0930
+@@ -5,6 +5,7 @@
+  */
+ 
+ 
++#include <zlib.h>
+ #include <png.h>
+ #include <allegro.h>
+ #include <allegro/internal/aintern.h>

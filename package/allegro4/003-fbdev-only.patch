@@ -1,0 +1,327 @@
+diff -Naur allegro4-4.4.1.1/CMakeLists.txt allegro4-4.4.1.1_new/CMakeLists.txt
+--- allegro4-4.4.1.1/CMakeLists.txt	2014-07-10 04:09:38.410244355 +0930
++++ allegro4-4.4.1.1_new/CMakeLists.txt	2014-07-10 01:58:59.943946476 +0930
+@@ -376,10 +376,7 @@
+ 
+ if(ALLEGRO_UNIX) # not MACOSX
+     find_package(Threads)
+-    if(NOT CMAKE_USE_PTHREADS_INIT)
+-        message(FATAL_ERROR "Unix port requires pthreads support.")
+-    endif()
+-    set(ALLEGRO_HAVE_LIBPTHREAD 1)
++    set(ALLEGRO_HAVE_LIBPTHREAD 0)
+     list(APPEND PLATFORM_LIBS m ${CMAKE_THREAD_LIBS_INIT})
+     list(APPEND PLATFORM_SOURCES ${ALLEGRO_SRC_UNIX_FILES})
+ 
+@@ -490,10 +487,10 @@
+     set(ALLEGRO_LINUX 1)
+     list(APPEND PLATFORM_SOURCES ${ALLEGRO_SRC_LINUX_FILES})
+ 
+-    if(WANT_LINUX_VGA)
+-        set(ALLEGRO_LINUX_VGA 1)
+-        add_our_module(alleg-vga src/misc/vga.c)
+-    endif()
++#    if(WANT_LINUX_VGA)
++#        set(ALLEGRO_LINUX_VGA 1)
++#        add_our_module(alleg-vga src/misc/vga.c)
++#    endif()
+ 
+     if(WANT_LINUX_FBCON)
+         check_c_source_compiles("
+@@ -509,26 +506,26 @@
+         endif()
+     endif()
+ 
+-    if(WANT_LINUX_SVGALIB)
+-        find_package(Svgalib)
+-        if(SVGALIB_FOUND)
+-            set(ALLEGRO_LINUX_SVGALIB 1)
+-            include_directories(SYSTEM ${SVGALIB_INCLUDE_DIR})
+-
+-            set(CMAKE_REQUIRED_LIBRARIES ${SVGALIB_LIBRARY})
+-            check_c_source_compiles("
+-                #include <vga.h>
+-                int main(void) {
+-                    int x = vga_version;
+-                    return 0;
+-                }"
+-                ALLEGRO_LINUX_SVGALIB_HAVE_VGA_VERSION)
+-
+-            list(APPEND PLATFORM_LIBS_NON_MODULES ${SVGALIB_LIBRARY})
+-            add_our_module(alleg-svgalib src/linux/svgalib.c
+-                ${SVGALIB_LIBRARY})
+-        endif()
+-    endif()
++#    if(WANT_LINUX_SVGALIB)
++#        find_package(Svgalib)
++#        if(SVGALIB_FOUND)
++#            set(ALLEGRO_LINUX_SVGALIB 1)
++#            include_directories(SYSTEM ${SVGALIB_INCLUDE_DIR})
++#
++#            set(CMAKE_REQUIRED_LIBRARIES ${SVGALIB_LIBRARY})
++#            check_c_source_compiles("
++#                #include <vga.h>
++#                int main(void) {
++#                    int x = vga_version;
++#                    return 0;
++#                }"
++#                ALLEGRO_LINUX_SVGALIB_HAVE_VGA_VERSION)
++#
++#            list(APPEND PLATFORM_LIBS_NON_MODULES ${SVGALIB_LIBRARY})
++#            add_our_module(alleg-svgalib src/linux/svgalib.c
++#                ${SVGALIB_LIBRARY})
++#        endif()
++#    endif()
+ endif(WANT_LINUX_CONSOLE AND CMAKE_SYSTEM_NAME STREQUAL Linux)
+ 
+ # -- Windows --
+diff -Naur allegro4-4.4.1.1/src/linux/lconsole.c allegro4-4.4.1.1_new/src/linux/lconsole.c
+--- allegro4-4.4.1.1/src/linux/lconsole.c	2008-02-01 08:27:05.000000000 +1030
++++ allegro4-4.4.1.1_new/src/linux/lconsole.c	2014-07-10 03:01:28.643446767 +0930
+@@ -45,6 +45,8 @@
+ struct termios __al_linux_startup_termio;
+ struct termios __al_linux_work_termio;
+ 
++#define NO_CONSOLE
++
+ 
+ /* get_tty:
+  *  Compares the inodes of /dev/ttyn (1 <= n <= 24) with the inode of the
+@@ -52,6 +54,7 @@
+  */
+ static int get_tty (int fd)
+ {
++#ifndef NO_CONSOLE
+    char name[16];
+    int tty;
+    ino_t inode;
+@@ -69,6 +72,9 @@
+    }
+ 
+    return (tty <= 24) ? tty : 0;
++#else
++   return -1;
++#endif
+ }
+ 
+ 
+@@ -77,6 +83,7 @@
+  */
+ static int init_console(void)
+ {
++#ifndef NO_CONSOLE
+    char tmp[256];
+ 
+    /* Find our tty's VT number */
+@@ -225,6 +232,7 @@
+    tcgetattr(__al_linux_console_fd, &__al_linux_startup_termio);
+    __al_linux_work_termio = __al_linux_startup_termio;
+ 
++#endif
+    return 0;
+ }
+ 
+@@ -234,6 +242,7 @@
+  */
+ static int done_console (void)
+ {
++#ifndef NO_CONSOLE
+    char msg[256];
+    int ret;
+ 
+@@ -261,7 +270,7 @@
+    tcsetattr (__al_linux_console_fd, TCSANOW, &__al_linux_startup_termio);
+    close (__al_linux_console_fd);
+    __al_linux_console_fd = -1;
+-
++#endif
+    return 0;
+ }
+ 
+@@ -273,6 +282,7 @@
+  */
+ int __al_linux_use_console(void)
+ {
++#ifndef NO_CONSOLE
+    console_users++;
+    if (console_users > 1) return 0;
+ 
+@@ -284,6 +294,9 @@
+    /* Initialise the console switching system */
+    set_display_switch_mode (SWITCH_PAUSE);
+    return __al_linux_init_vtswitch();
++#else
++   return 0;
++#endif
+ }
+ 
+ 
+@@ -292,6 +305,7 @@
+  */
+ int __al_linux_leave_console(void)
+ {
++#ifndef NO_CONSOLE
+    ASSERT (console_users > 0);
+    console_users--;
+    if (console_users > 0) return 0;
+@@ -299,7 +313,7 @@
+    /* shut down the console switching system */
+    if (__al_linux_done_vtswitch()) return 1;
+    if (done_console()) return 1;
+-   
++#endif 
+    return 0;
+ }
+ 
+@@ -311,6 +325,7 @@
+  */
+ int __al_linux_console_graphics (void)
+ {
++#ifndef NO_CONSOLE
+    if (__al_linux_use_console()) return 1;
+ 
+    if (graphics_mode) return 0;  /* shouldn't happen */
+@@ -320,7 +335,7 @@
+    __al_linux_wait_for_display();
+ 
+    graphics_mode = 1;
+-
++#endif
+    return 0;
+ }
+ 
+@@ -330,6 +345,7 @@
+  */
+ int __al_linux_console_text (void)
+ {
++#ifndef NO_CONSOLE
+    int ret;
+ 
+    if (!graphics_mode)
+@@ -347,7 +363,7 @@
+    
+    __al_linux_display_switch_lock(FALSE, FALSE);
+    __al_linux_leave_console();
+-
++#endif
+    return 0;
+ }
+ 
+@@ -357,10 +373,14 @@
+  */
+ int __al_linux_wait_for_display (void)
+ {
++#ifndef NO_CONSOLE
+    int x;
+    do {
+       x = ioctl (__al_linux_console_fd, VT_WAITACTIVE, __al_linux_vt);
+    } while (x && errno != EINTR);
+    return x;
++#else
++   return 0;
++#endif
+ }
+ 
+diff -Naur allegro4-4.4.1.1/src/linux/lsystem.c allegro4-4.4.1.1_new/src/linux/lsystem.c
+--- allegro4-4.4.1.1/src/linux/lsystem.c	2008-02-01 08:27:05.000000000 +1030
++++ allegro4-4.4.1.1_new/src/linux/lsystem.c	2014-07-10 02:48:05.523777474 +0930
+@@ -50,12 +50,12 @@
+ /* driver list getters */
+ #define make_getter(x,y) static _DRIVER_INFO *get_##y##_driver_list (void) { return x##_##y##_driver_list; }
+ 	make_getter (_unix, gfx)
+-	make_getter (_unix, digi)
+-	make_getter (_unix, midi)
+-	make_getter (_linux, keyboard)
+-	make_getter (_linux, mouse)
++//	make_getter (_unix, digi)
++//	make_getter (_unix, midi)
++//	make_getter (_linux, keyboard)
++//	make_getter (_linux, mouse)
+ 	make_getter (_linux, timer)
+-	make_getter (_linux, joystick)
++//	make_getter (_linux, joystick)
+ #undef make_getter
+ 
+ 
+@@ -95,23 +95,26 @@
+ #endif
+    NULL, /* get_gfx_safe_mode */
+    _unix_yield_timeslice,
++   /*
+ #ifdef ALLEGRO_HAVE_LIBPTHREAD
+    _unix_create_mutex,
+    _unix_destroy_mutex,
+    _unix_lock_mutex,
+    _unix_unlock_mutex,
+ #else
++   */
+    NULL, /* create_mutex */
+    NULL, /* destroy_mutex */
+    NULL, /* lock_mutex */
+    NULL, /* unlock_mutex */
+-#endif
++//#endif
+    get_gfx_driver_list,
+-   get_digi_driver_list,
++/*   get_digi_driver_list,
+    get_midi_driver_list,
+    get_keyboard_driver_list,
+    get_mouse_driver_list,
+-   get_joystick_driver_list,
++   get_joystick_driver_list, */
++   NULL, NULL, NULL, NULL, NULL,
+    get_timer_driver_list
+ };
+ 
+diff -Naur allegro4-4.4.1.1/src/linux/ltimer.c allegro4-4.4.1.1_new/src/linux/ltimer.c
+--- allegro4-4.4.1.1/src/linux/ltimer.c	2007-06-16 11:22:28.000000000 +0930
++++ allegro4-4.4.1.1_new/src/linux/ltimer.c	2014-07-10 02:10:32.032029143 +0930
+@@ -23,11 +23,7 @@
+ /* list the available drivers */
+ _DRIVER_INFO _linux_timer_driver_list[] =
+ {
+-#ifdef ALLEGRO_HAVE_LIBPTHREAD
+-   {  TIMERDRV_UNIX_PTHREADS,  &timerdrv_unix_pthreads, TRUE  },
+-#else
+    {  TIMERDRV_UNIX_SIGALRM,   &timerdrv_unix_sigalrm,  TRUE  },
+-#endif
+    {  0,                       NULL,                    0     }
+ };
+ 
+diff -Naur allegro4-4.4.1.1/src/unix/utimer.c allegro4-4.4.1.1_new/src/unix/utimer.c
+--- allegro4-4.4.1.1/src/unix/utimer.c	2005-09-03 23:35:08.000000000 +0930
++++ allegro4-4.4.1.1_new/src/unix/utimer.c	2014-07-10 03:52:24.083519498 +0930
+@@ -42,6 +44,8 @@
+  *  This function is from the glibc manual.  It handles weird platforms
+  *  where the tv_sec is unsigned.
+  */
++
++#ifdef OLD_CODE
+ static int timeval_subtract(struct timeval *result,
+ 			    struct timeval *x,
+ 			    struct timeval *y)
+@@ -120,3 +124,23 @@
+       }
+    }
+ }
++
++#else
++
++
++void _unix_rest(unsigned int ms, void (*callback) (void))
++{
++	struct timespec time;
++	struct timespec rem;
++	time.tv_sec = ms / 1000;
++	time.tv_nsec = (ms - (time.tv_sec*1000)) * 1000000;
++	while (nanosleep(&time, &rem) == -1)
++	{
++		time.tv_sec = rem.tv_sec;
++		time.tv_nsec = rem.tv_nsec;
++		if (callback)
++			callback();
++	}
++}
++
++#endif
+
