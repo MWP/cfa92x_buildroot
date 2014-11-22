@@ -178,6 +178,8 @@ source "package/jhead/Config.in"
 source "package/rrdtool/Config.in"
 
 comment "Graphic libraries"
+source "package/allegro4/Config.in"
+source "package/allegro5/Config.in"
 source "package/cegui06/Config.in"
 source "package/directfb/Config.in"
 source "package/directfb-examples/Config.in"
